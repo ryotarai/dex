@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"strings"
 
 	"gopkg.in/ldap.v2"
 
@@ -126,6 +127,8 @@ type Config struct {
 		//
 		UserAttr  string `json:"userAttr"`
 		GroupAttr string `json:"groupAttr"`
+
+		UserChildAttr string `json:"userChildAttr"`
 
 		// The attribute of the group that represents its name.
 		NameAttr string `json:"nameAttr"`
@@ -288,12 +291,31 @@ func (c *ldapConnector) do(ctx context.Context, f func(c *ldap.Conn) error) erro
 	return f(conn)
 }
 
-func getAttrs(e ldap.Entry, name string) []string {
+func parseAttrValue(value string) map[string]string {
+	m := map[string]string{}
+	parts := strings.Split(value, ",")
+	for _, p := range parts {
+		kv := strings.SplitN(p, "=", 2)
+		m[kv[0]] = kv[1]
+	}
+	return m
+}
+
+func getAttrs(e ldap.Entry, name string, child string) []string {
 	for _, a := range e.Attributes {
 		if a.Name != name {
 			continue
 		}
-		return a.Values
+
+		if child == "" {
+			return a.Values
+		}
+
+		subValues := []string{}
+		for _, v := range a.Values {
+			subValues = append(subValues, parseAttrValue(v)[child])
+		}
+		return subValues
 	}
 	if name == "DN" {
 		return []string{e.DN}
@@ -302,7 +324,7 @@ func getAttrs(e ldap.Entry, name string) []string {
 }
 
 func getAttr(e ldap.Entry, name string) string {
-	if a := getAttrs(e, name); len(a) > 0 {
+	if a := getAttrs(e, name, ""); len(a) > 0 {
 		return a[0]
 	}
 	return ""
@@ -501,7 +523,7 @@ func (c *ldapConnector) groups(ctx context.Context, user ldap.Entry) ([]string, 
 	}
 
 	var groups []*ldap.Entry
-	for _, attr := range getAttrs(user, c.GroupSearch.UserAttr) {
+	for _, attr := range getAttrs(user, c.GroupSearch.UserAttr, c.GroupSearch.UserChildAttr) {
 		filter := fmt.Sprintf("(%s=%s)", c.GroupSearch.GroupAttr, ldap.EscapeFilter(attr))
 		if c.GroupSearch.Filter != "" {
 			filter = fmt.Sprintf("(&%s%s)", c.GroupSearch.Filter, filter)

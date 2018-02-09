@@ -192,8 +192,14 @@ func cmd() *cobra.Command {
 			}
 		},
 	}
+
+	defaultClientSecret := os.Getenv("CLIENT_SECRET")
+	if defaultClientSecret == "" {
+		defaultClientSecret = "ZXhhbXBsZS1hcHAtc2VjcmV0"
+	}
+
 	c.Flags().StringVar(&a.clientID, "client-id", "example-app", "OAuth2 client ID of this application.")
-	c.Flags().StringVar(&a.clientSecret, "client-secret", "ZXhhbXBsZS1hcHAtc2VjcmV0", "OAuth2 client secret of this application.")
+	c.Flags().StringVar(&a.clientSecret, "client-secret", defaultClientSecret, "OAuth2 client secret of this application.")
 	c.Flags().StringVar(&a.redirectURI, "redirect-uri", "http://127.0.0.1:5555/callback", "Callback URL for OAuth2 responses.")
 	c.Flags().StringVar(&issuerURL, "issuer", "http://127.0.0.1:5556/dex", "URL of the OpenID Connect issuer.")
 	c.Flags().StringVar(&listen, "listen", "http://127.0.0.1:5555", "HTTP(S) address to listen at.")

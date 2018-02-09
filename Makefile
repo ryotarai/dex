@@ -31,6 +31,7 @@ bin/grpc-client: check-go-version
 .PHONY: release-binary
 release-binary:
 	@go build -o /go/bin/dex -v -ldflags $(LD_FLAGS) $(REPO_PATH)/cmd/dex
+	@go build -o /go/bin/example-app -v -ldflags $(LD_FLAGS) $(REPO_PATH)/cmd/example-app
 
 .PHONY: revendor
 revendor: bin/license-bill-of-materials

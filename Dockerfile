@@ -14,6 +14,7 @@ FROM alpine:3.4
 RUN apk add --update ca-certificates openssl
 
 COPY --from=0 /go/bin/dex /usr/local/bin/dex
+COPY --from=0 /go/bin/example-app /usr/local/bin/example-app
 
 # Import frontend assets and set the correct CWD directory so the assets
 # are in the default path.

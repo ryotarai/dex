@@ -534,12 +534,13 @@ func (s *Server) validateCrossClientTrust(clientID, peerID string) (trusted bool
 }
 
 func validateRedirectURI(client storage.Client, redirectURI string) bool {
-	if !client.Public {
-		for _, uri := range client.RedirectURIs {
-			if redirectURI == uri {
-				return true
-			}
+	for _, uri := range client.RedirectURIs {
+		if redirectURI == uri {
+			return true
 		}
+	}
+
+	if !client.Public {
 		return false
 	}
 
